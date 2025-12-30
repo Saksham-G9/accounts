@@ -8,6 +8,7 @@ import com.example.accounts.dto.CustomerDto;
 import com.example.accounts.entity.Accounts;
 import com.example.accounts.entity.Customer;
 import com.example.accounts.exception.CustomerAlreadyExistsException;
+import com.example.accounts.exception.ResourceNotFoundException;
 import com.example.accounts.mapper.AccountsMapper;
 import com.example.accounts.mapper.CustomerMapper;
 import com.example.accounts.repository.AccountsRepository;
@@ -35,8 +36,11 @@ public class AccountServiceImpl implements IAccountsService {
         }
 
         Customer customer = CustomerMapper.mapToCustomerEntity(customerDto);
+        customer.setCreatedBy(AccountsConstants.CREATED_BY_SYSTEM);
         customerRepository.save(customer);
         Accounts account = createNewAccountForCustomer(customer.getCustomerId());
+        account.setCreatedBy(AccountsConstants.CREATED_BY_SYSTEM);
+        account.setUpdatedBy(AccountsConstants.CREATED_BY_SYSTEM);
         accountsRepository.save(account);
     }
 
@@ -50,8 +54,15 @@ public class AccountServiceImpl implements IAccountsService {
         return account;
     }
 
-    // @Override
-    // public AccountsDto getAccountDetails(Long customerId) {
-    // //
-    // }
+    @Override
+    public CustomerDto getAccountDetails(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber));
+        Accounts account = accountsRepository.findByCustomerId(customer.getCustomerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Accounts", "customerId",
+                        customer.getCustomerId().toString()));
+
+        AccountsDto accountsDto = AccountsMapper.mapToAccountsDto(account);
+        return CustomerMapper.mapToCustomerDto(customer, accountsDto);
+    }
 }

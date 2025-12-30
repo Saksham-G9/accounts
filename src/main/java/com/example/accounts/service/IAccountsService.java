@@ -10,5 +10,11 @@ public interface IAccountsService {
      */
     void createAccount(CustomerDto customerDto);
 
-    // CustomerDto getAccountDetails(Long customerId);
+    /**
+     * Retrieve account details based on the provided mobile number.
+     *
+     * @param mobileNumber The mobile number associated with the customer.
+     * @return CustomerDto containing customer and account details.
+     */
+    CustomerDto getAccountDetails(String mobileNumber);
 }
