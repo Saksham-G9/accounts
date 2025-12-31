@@ -2,6 +2,7 @@ package com.example.accounts.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -33,18 +34,39 @@ public class AccountsController {
     }
 
     @GetMapping("/fetch")
-    public ResponseEntity<CustomerDto> getAccountDetails(@RequestParam String mobileNumber){
+    public ResponseEntity<CustomerDto> getAccountDetails(@RequestParam String mobileNumber) {
         CustomerDto customerDto = accountsService.getAccountDetails(mobileNumber);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(customerDto);
     }
+    
 
     @PutMapping
     public ResponseEntity<ResponseDto> updateAccount(@RequestBody CustomerDto customerDto) {
-        // Implementation for updating account details goes here
-        return ResponseEntity
-                .status(HttpStatus.NOT_IMPLEMENTED)
-                .body(new ResponseDto(AccountsConstants.STATUS_501, "Update account functionality not implemented yet."));
+        boolean isUpdated = accountsService.updateAccount(customerDto);
+        if (isUpdated) {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(new ResponseDto(AccountsConstants.STATUS_200, "Account updated successfully."));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseDto(AccountsConstants.STATUS_404, "Account not found."));
+        }
+    }
+
+    @DeleteMapping
+    public ResponseEntity<ResponseDto> deleteAccount(@RequestParam String mobileNumber) {
+        boolean isDeleted = accountsService.deleteAccount(mobileNumber);
+        if (isDeleted) {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(new ResponseDto(AccountsConstants.STATUS_200, "Account deleted successfully."));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseDto(AccountsConstants.STATUS_404, "Account not found."));
+        }
     }
 }
