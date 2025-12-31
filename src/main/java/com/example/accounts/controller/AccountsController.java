@@ -18,6 +18,8 @@ import com.example.accounts.dto.CustomerDto;
 import com.example.accounts.dto.ResponseDto;
 import com.example.accounts.service.IAccountsService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ import lombok.RequiredArgsConstructor;
  * accounts.
  * All responses are returned in JSON format.
  */
+@Tag(name = "Accounts Controller", description = "APIs for managing customer accounts")
 @RestController
 @RequestMapping(path = "api/accounts", produces = "application/json")
 @RequiredArgsConstructor
@@ -45,6 +48,7 @@ public class AccountsController {
      * @return ResponseEntity with status 201 and success message
      */
     @PostMapping
+    @Operation(summary = "Create Account", description = "Creates a new customer account")
     public ResponseEntity<ResponseDto> createAccount(@Valid @RequestBody CustomerDto customerDto) {
         logger.info("Creating account for customer with mobile number: {}", customerDto.getMobileNumber());
         accountsService.createAccount(customerDto);
@@ -59,6 +63,7 @@ public class AccountsController {
      * @return ResponseEntity with status 200 and customer account details
      */
     @GetMapping("/fetch")
+    @Operation(summary = "Get Account Details", description = "Retrieves account details for a specific customer")
     public ResponseEntity<CustomerDto> getAccountDetails(
             @RequestParam @Pattern(regexp = "^\\d{10}$", message = "Mobile number must be 10 digits") String mobileNumber) {
         logger.info("Fetching account details for mobile number: {}", mobileNumber);
@@ -75,6 +80,7 @@ public class AccountsController {
      *         found
      */
     @PutMapping
+    @Operation(summary = "Update Account", description = "Updates an existing customer account")
     public ResponseEntity<ResponseDto> updateAccount(@Valid @RequestBody CustomerDto customerDto) {
         logger.info("Updating account for customer with mobile number: {}", customerDto.getMobileNumber());
         boolean isUpdated = accountsService.updateAccount(customerDto);
@@ -95,6 +101,7 @@ public class AccountsController {
      *         found
      */
     @DeleteMapping
+    @Operation(summary = "Delete Account", description = "Deletes a customer account")
     public ResponseEntity<ResponseDto> deleteAccount(
             @RequestParam @Pattern(regexp = "^\\d{10}$", message = "Mobile number must be 10 digits") String mobileNumber) {
         logger.info("Deleting account for mobile number: {}", mobileNumber);
