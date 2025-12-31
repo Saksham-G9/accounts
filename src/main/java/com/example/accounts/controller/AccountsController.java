@@ -1,5 +1,7 @@
 package com.example.accounts.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,57 +18,105 @@ import com.example.accounts.dto.CustomerDto;
 import com.example.accounts.dto.ResponseDto;
 import com.example.accounts.service.IAccountsService;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * REST controller for managing customer accounts.
+ * 
+ * Provides endpoints for creating, retrieving, updating, and deleting customer
+ * accounts.
+ * All responses are returned in JSON format.
+ */
 @RestController
 @RequestMapping(path = "api/accounts", produces = "application/json")
 @RequiredArgsConstructor
 public class AccountsController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AccountsController.class);
     private final IAccountsService accountsService;
 
+    /**
+     * Creates a new customer account.
+     * 
+     * @param customerDto the customer data transfer object containing customer
+     *                    details
+     * @return ResponseEntity with status 201 and success message
+     */
     @PostMapping
-    public ResponseEntity<ResponseDto> createAccount(@RequestBody CustomerDto customerDto) {
+    public ResponseEntity<ResponseDto> createAccount(@Valid @RequestBody CustomerDto customerDto) {
+        logger.info("Creating account for customer with mobile number: {}", customerDto.getMobileNumber());
         accountsService.createAccount(customerDto);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
+        logger.info("Account created successfully for mobile number: {}", customerDto.getMobileNumber());
+        return buildResponse(HttpStatus.CREATED, AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201);
     }
 
+    /**
+     * Retrieves account details for a specific customer.
+     * 
+     * @param mobileNumber the 10-digit mobile number of the customer
+     * @return ResponseEntity with status 200 and customer account details
+     */
     @GetMapping("/fetch")
-    public ResponseEntity<CustomerDto> getAccountDetails(@RequestParam String mobileNumber) {
+    public ResponseEntity<CustomerDto> getAccountDetails(
+            @RequestParam @Pattern(regexp = "^\\d{10}$", message = "Mobile number must be 10 digits") String mobileNumber) {
+        logger.info("Fetching account details for mobile number: {}", mobileNumber);
         CustomerDto customerDto = accountsService.getAccountDetails(mobileNumber);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(customerDto);
+        return ResponseEntity.status(HttpStatus.OK).body(customerDto);
     }
-    
 
+    /**
+     * Updates an existing customer account.
+     * 
+     * @param customerDto the customer data transfer object containing updated
+     *                    customer details
+     * @return ResponseEntity with status 200 if successful, or 404 if account not
+     *         found
+     */
     @PutMapping
-    public ResponseEntity<ResponseDto> updateAccount(@RequestBody CustomerDto customerDto) {
+    public ResponseEntity<ResponseDto> updateAccount(@Valid @RequestBody CustomerDto customerDto) {
+        logger.info("Updating account for customer with mobile number: {}", customerDto.getMobileNumber());
         boolean isUpdated = accountsService.updateAccount(customerDto);
         if (isUpdated) {
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(new ResponseDto(AccountsConstants.STATUS_200, "Account updated successfully."));
+            logger.info("Account updated successfully for mobile number: {}", customerDto.getMobileNumber());
+            return buildResponse(HttpStatus.OK, AccountsConstants.STATUS_200, AccountsConstants.MESSAGE_200);
         } else {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseDto(AccountsConstants.STATUS_404, "Account not found."));
+            logger.warn("Account not found for mobile number: {}", customerDto.getMobileNumber());
+            return buildResponse(HttpStatus.NOT_FOUND, AccountsConstants.STATUS_404, "Account not found.");
         }
     }
 
+    /**
+     * Deletes a customer account.
+     * 
+     * @param mobileNumber the 10-digit mobile number of the customer
+     * @return ResponseEntity with status 200 if successful, or 404 if account not
+     *         found
+     */
     @DeleteMapping
-    public ResponseEntity<ResponseDto> deleteAccount(@RequestParam String mobileNumber) {
+    public ResponseEntity<ResponseDto> deleteAccount(
+            @RequestParam @Pattern(regexp = "^\\d{10}$", message = "Mobile number must be 10 digits") String mobileNumber) {
+        logger.info("Deleting account for mobile number: {}", mobileNumber);
         boolean isDeleted = accountsService.deleteAccount(mobileNumber);
         if (isDeleted) {
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(new ResponseDto(AccountsConstants.STATUS_200, "Account deleted successfully."));
+            logger.info("Account deleted successfully for mobile number: {}", mobileNumber);
+            return buildResponse(HttpStatus.OK, AccountsConstants.STATUS_200, "Account deleted successfully.");
         } else {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseDto(AccountsConstants.STATUS_404, "Account not found."));
+            logger.warn("Account not found for deletion with mobile number: {}", mobileNumber);
+            return buildResponse(HttpStatus.NOT_FOUND, AccountsConstants.STATUS_404, "Account not found.");
         }
+    }
+
+    /**
+     * Helper method to build a consistent ResponseEntity.
+     * 
+     * @param status     the HTTP status code
+     * @param statusCode the custom status code
+     * @param message    the response message
+     * @return ResponseEntity with the specified status and response body
+     */
+    private ResponseEntity<ResponseDto> buildResponse(HttpStatus status, String statusCode, String message) {
+        return ResponseEntity.status(status).body(new ResponseDto(statusCode, message));
     }
 }
