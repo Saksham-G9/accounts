@@ -36,11 +36,8 @@ public class AccountServiceImpl implements IAccountsService {
         }
 
         Customer customer = CustomerMapper.mapToCustomerEntity(customerDto);
-        customer.setCreatedBy(AccountsConstants.CREATED_BY_SYSTEM);
         customerRepository.save(customer);
         Accounts account = createNewAccountForCustomer(customer.getCustomerId());
-        account.setCreatedBy(AccountsConstants.CREATED_BY_SYSTEM);
-        account.setUpdatedBy(AccountsConstants.CREATED_BY_SYSTEM);
         accountsRepository.save(account);
     }
 
